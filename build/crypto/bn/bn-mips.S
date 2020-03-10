@@ -14,6 +14,32 @@
 # define mfrm(rd,rs,rt)	mfhi	rd
 #endif
 
+#ifndef __CHERI_PURE_CAPABILITY__
+# define RET	jr	$31
+#else
+# define RET	cjr	$c17
+#endif
+
+#ifdef __CHERI_PURE_CAPABILITY__
+.macro c128_to_n64_22
+	move	$6,$4
+	move	$7,$5
+	cgetaddr $4,$c3
+	cgetaddr $5,$c4
+.end_macro
+.macro c128_to_n64_31
+	move	$7,$4
+	cgetaddr $4,$c3
+	cgetaddr $5,$c4
+	cgetaddr $6,$c5
+.end_macro
+#else
+.macro c128_to_n64_22
+.end_macro
+.macro c128_to_n64_31
+.end_macro
+#endif
+
 .rdata
 .asciiz	"mips3.s, Version 1.2"
 .asciiz	"MIPS II/III/IV ISA artwork by Andy Polyakov <appro@fy.chalmers.se>"
@@ -26,9 +52,10 @@
 .ent	bn_mul_add_words
 bn_mul_add_words:
 	.set	noreorder
+	c128_to_n64_22
 	bgtz	$6,bn_mul_add_words_internal
 	move	$2,$0
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_mul_add_words
 
@@ -161,6 +188,7 @@ bn_mul_add_words_internal:
 .ent	bn_mul_words
 bn_mul_words:
 	.set	noreorder
+	c128_to_n64_22
 	bgtz	$6,bn_mul_words_internal
 	move	$2,$0
 	jr	$31
@@ -265,6 +293,7 @@ bn_mul_words_internal:
 .ent	bn_sqr_words
 bn_sqr_words:
 	.set	noreorder
+	c128_to_n64_21
 	bgtz	$6,bn_sqr_words_internal
 	move	$2,$0
 	jr	$31
@@ -358,6 +387,7 @@ bn_sqr_words_internal:
 .ent	bn_add_words
 bn_add_words:
 	.set	noreorder
+	c128_to_n64_31
 	bgtz	$7,bn_add_words_internal
 	move	$2,$0
 	jr	$31
@@ -465,6 +495,7 @@ bn_add_words_internal:
 .ent	bn_sub_words
 bn_sub_words:
 	.set	noreorder
+	c128_to_n64_31
 	bgtz	$7,bn_sub_words_internal
 	move	$2,$0
 	jr	$31
@@ -577,6 +608,7 @@ bn_sub_words_internal:
 .ent	bn_div_3_words
 bn_div_3_words:
 	.set	noreorder
+	c128_to_n64_12
 	move	$7,$4		# we know that bn_div_words does not
 				# touch $7, $10, $11 and preserves $6
 				# so that we can save two arguments
@@ -763,6 +795,7 @@ bn_mul_comba8:
 	sd	$16,0*8($29)
 
 	.set	reorder
+	c128_to_n64_30
 	ld	$12,0($5)	# If compiled with -mips3 option on
 				# R5000 box assembler barks on this
 				# 1ine with "should not have mult/div
@@ -1384,6 +1417,7 @@ bn_mul_comba8:
 .ent	bn_mul_comba4
 bn_mul_comba4:
 	.set	reorder
+	c128_to_n64_30
 	ld	$12,0($5)
 	ld	$8,0($6)
 	ld	$13,8($5)
@@ -1543,6 +1577,7 @@ bn_mul_comba4:
 .ent	bn_sqr_comba8
 bn_sqr_comba8:
 	.set	reorder
+	c128_to_n64_20
 	ld	$12,0($5)
 	ld	$13,8($5)
 	ld	$14,2*8($5)
@@ -2049,6 +2084,7 @@ bn_sqr_comba8:
 .ent	bn_sqr_comba4
 bn_sqr_comba4:
 	.set	reorder
+	c128_to_n64_20
 	ld	$12,0($5)
 	ld	$13,8($5)
 	dmultu	($12,$12)		# mul_add_c(a[0],b[0],c1,c2,c3);
