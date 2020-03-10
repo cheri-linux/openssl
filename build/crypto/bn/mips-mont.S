@@ -9,14 +9,6 @@
 .globl	bn_mul_mont
 .ent	bn_mul_mont
 bn_mul_mont:
-#ifdef __CHERI_PURE_CAPABILITY__
-	move	$9,$4
-	cgetaddr $4,$c3
-	cgetaddr $5,$c4
-	cgetaddr $6,$c5
-	cgetaddr $7,$c6
-	cgetaddr $8,$c7
-#endif
 	slt	$1,$9,4
 	bnez	$1,1f
 	li	$2,0

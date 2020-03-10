@@ -14,12 +14,6 @@
 # define mfrm(rd,rs,rt)	mfhi	rd
 #endif
 
-#ifndef __CHERI_PURE_CAPABILITY__
-#define RET	jr	$31
-#else
-#define RET	cjr	$c17
-#endif
-
 .rdata
 .asciiz	"mips3.s, Version 1.2"
 .asciiz	"MIPS II/III/IV ISA artwork by Andy Polyakov <appro@fy.chalmers.se>"
@@ -34,7 +28,7 @@ bn_mul_add_words:
 	.set	noreorder
 	bgtz	$6,bn_mul_add_words_internal
 	move	$2,$0
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_mul_add_words
 
@@ -158,7 +152,7 @@ bn_mul_add_words_internal:
 
 .L_bn_mul_add_words_return:
 	.set	noreorder
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_mul_add_words_internal
 
@@ -169,7 +163,7 @@ bn_mul_words:
 	.set	noreorder
 	bgtz	$6,bn_mul_words_internal
 	move	$2,$0
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_mul_words
 
@@ -262,7 +256,7 @@ bn_mul_words_internal:
 
 .L_bn_mul_words_return:
 	.set	noreorder
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_mul_words_internal
 
@@ -273,7 +267,7 @@ bn_sqr_words:
 	.set	noreorder
 	bgtz	$6,bn_sqr_words_internal
 	move	$2,$0
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_sqr_words
 
@@ -354,7 +348,7 @@ bn_sqr_words_internal:
 
 .L_bn_sqr_words_return:
 	.set	noreorder
-	RET
+	jr	$31
 	move	$4,$2
 
 .end	bn_sqr_words_internal
@@ -366,7 +360,7 @@ bn_add_words:
 	.set	noreorder
 	bgtz	$7,bn_add_words_internal
 	move	$2,$0
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_add_words
 
@@ -427,149 +421,149 @@ bn_add_words_internal:
 	nop
 
 .L_bn_add_words_tail:
-		.set	reorder
-		ld	$12,0($5)
-		ld	$8,0($6)
-		daddu	$8,$12
-		subu	$7,1
-		sltu	$24,$8,$12
-		daddu	$12,$8,$2
-		sltu	$2,$12,$8
-		sd	$12,0($4)
-		daddu	$2,$24
-		beqz	$7,.L_bn_add_words_return
+	.set	reorder
+	ld	$12,0($5)
+	ld	$8,0($6)
+	daddu	$8,$12
+	subu	$7,1
+	sltu	$24,$8,$12
+	daddu	$12,$8,$2
+	sltu	$2,$12,$8
+	sd	$12,0($4)
+	daddu	$2,$24
+	beqz	$7,.L_bn_add_words_return
 
-		ld	$13,8($5)
-		ld	$9,8($6)
-		daddu	$9,$13
-		subu	$7,1
-		sltu	$25,$9,$13
-		daddu	$13,$9,$2
-		sltu	$2,$13,$9
-		sd	$13,8($4)
-		daddu	$2,$25
-		beqz	$7,.L_bn_add_words_return
+	ld	$13,8($5)
+	ld	$9,8($6)
+	daddu	$9,$13
+	subu	$7,1
+	sltu	$25,$9,$13
+	daddu	$13,$9,$2
+	sltu	$2,$13,$9
+	sd	$13,8($4)
+	daddu	$2,$25
+	beqz	$7,.L_bn_add_words_return
 
-		ld	$14,2*8($5)
-		ld	$10,2*8($6)
-		daddu	$10,$14
-		sltu	$24,$10,$14
-		daddu	$14,$10,$2
-		sltu	$2,$14,$10
-		sd	$14,2*8($4)
-		daddu	$2,$24
+	ld	$14,2*8($5)
+	ld	$10,2*8($6)
+	daddu	$10,$14
+	sltu	$24,$10,$14
+	daddu	$14,$10,$2
+	sltu	$2,$14,$10
+	sd	$14,2*8($4)
+	daddu	$2,$24
 
-	.L_bn_add_words_return:
-		.set	noreorder
-		RET
-		move	$4,$2
+.L_bn_add_words_return:
+	.set	noreorder
+	jr	$31
+	move	$4,$2
 
-	.end	bn_add_words_internal
+.end	bn_add_words_internal
 
-	.align	5
-	.globl	bn_sub_words
-	.ent	bn_sub_words
-	bn_sub_words:
-		.set	noreorder
-		bgtz	$7,bn_sub_words_internal
-		move	$2,$0
-		RET
-		move	$4,$0
-	.end	bn_sub_words
+.align	5
+.globl	bn_sub_words
+.ent	bn_sub_words
+bn_sub_words:
+	.set	noreorder
+	bgtz	$7,bn_sub_words_internal
+	move	$2,$0
+	jr	$31
+	move	$4,$0
+.end	bn_sub_words
 
-	.align	5
-	.ent	bn_sub_words_internal
-	bn_sub_words_internal:
-		.set	reorder
-		li	$3,-4
-		and	$1,$7,$3
-		beqz	$1,.L_bn_sub_words_tail
+.align	5
+.ent	bn_sub_words_internal
+bn_sub_words_internal:
+	.set	reorder
+	li	$3,-4
+	and	$1,$7,$3
+	beqz	$1,.L_bn_sub_words_tail
 
-	.L_bn_sub_words_loop:
-		ld	$12,0($5)
-		ld	$8,0($6)
-		subu	$7,4
-		ld	$13,8($5)
-		and	$1,$7,$3
-		ld	$14,2*8($5)
-		daddu $6,4*8
-		ld	$15,3*8($5)
-		daddu $4,4*8
-		ld	$9,-3*8($6)
-		daddu $5,4*8
-		ld	$10,-2*8($6)
-		ld	$11,-8($6)
-		sltu	$24,$12,$8
-		dsubu	$8,$12,$8
-		dsubu	$12,$8,$2
-		sgtu	$2,$12,$8
-		sd	$12,-4*8($4)
-		daddu	$2,$24
+.L_bn_sub_words_loop:
+	ld	$12,0($5)
+	ld	$8,0($6)
+	subu	$7,4
+	ld	$13,8($5)
+	and	$1,$7,$3
+	ld	$14,2*8($5)
+	daddu $6,4*8
+	ld	$15,3*8($5)
+	daddu $4,4*8
+	ld	$9,-3*8($6)
+	daddu $5,4*8
+	ld	$10,-2*8($6)
+	ld	$11,-8($6)
+	sltu	$24,$12,$8
+	dsubu	$8,$12,$8
+	dsubu	$12,$8,$2
+	sgtu	$2,$12,$8
+	sd	$12,-4*8($4)
+	daddu	$2,$24
 
-		sltu	$25,$13,$9
-		dsubu	$9,$13,$9
-		dsubu	$13,$9,$2
-		sgtu	$2,$13,$9
-		sd	$13,-3*8($4)
-		daddu	$2,$25
+	sltu	$25,$13,$9
+	dsubu	$9,$13,$9
+	dsubu	$13,$9,$2
+	sgtu	$2,$13,$9
+	sd	$13,-3*8($4)
+	daddu	$2,$25
 
 
-		sltu	$24,$14,$10
-		dsubu	$10,$14,$10
-		dsubu	$14,$10,$2
-		sgtu	$2,$14,$10
-		sd	$14,-2*8($4)
-		daddu	$2,$24
+	sltu	$24,$14,$10
+	dsubu	$10,$14,$10
+	dsubu	$14,$10,$2
+	sgtu	$2,$14,$10
+	sd	$14,-2*8($4)
+	daddu	$2,$24
 
-		sltu	$25,$15,$11
-		dsubu	$11,$15,$11
-		dsubu	$15,$11,$2
-		sgtu	$2,$15,$11
-		sd	$15,-8($4)
+	sltu	$25,$15,$11
+	dsubu	$11,$15,$11
+	dsubu	$15,$11,$2
+	sgtu	$2,$15,$11
+	sd	$15,-8($4)
 
-		.set	noreorder
-		bgtz	$1,.L_bn_sub_words_loop
-		daddu	$2,$25
+	.set	noreorder
+	bgtz	$1,.L_bn_sub_words_loop
+	daddu	$2,$25
 
-		beqz	$7,.L_bn_sub_words_return
-		nop
+	beqz	$7,.L_bn_sub_words_return
+	nop
 
-	.L_bn_sub_words_tail:
-		.set	reorder
-		ld	$12,0($5)
-		ld	$8,0($6)
-		subu	$7,1
-		sltu	$24,$12,$8
-		dsubu	$8,$12,$8
-		dsubu	$12,$8,$2
-		sgtu	$2,$12,$8
-		sd	$12,0($4)
-		daddu	$2,$24
-		beqz	$7,.L_bn_sub_words_return
+.L_bn_sub_words_tail:
+	.set	reorder
+	ld	$12,0($5)
+	ld	$8,0($6)
+	subu	$7,1
+	sltu	$24,$12,$8
+	dsubu	$8,$12,$8
+	dsubu	$12,$8,$2
+	sgtu	$2,$12,$8
+	sd	$12,0($4)
+	daddu	$2,$24
+	beqz	$7,.L_bn_sub_words_return
 
-		ld	$13,8($5)
-		subu	$7,1
-		ld	$9,8($6)
-		sltu	$25,$13,$9
-		dsubu	$9,$13,$9
-		dsubu	$13,$9,$2
-		sgtu	$2,$13,$9
-		sd	$13,8($4)
-		daddu	$2,$25
-		beqz	$7,.L_bn_sub_words_return
+	ld	$13,8($5)
+	subu	$7,1
+	ld	$9,8($6)
+	sltu	$25,$13,$9
+	dsubu	$9,$13,$9
+	dsubu	$13,$9,$2
+	sgtu	$2,$13,$9
+	sd	$13,8($4)
+	daddu	$2,$25
+	beqz	$7,.L_bn_sub_words_return
 
-		ld	$14,2*8($5)
-		ld	$10,2*8($6)
-		sltu	$24,$14,$10
-		dsubu	$10,$14,$10
-		dsubu	$14,$10,$2
-		sgtu	$2,$14,$10
-		sd	$14,2*8($4)
-		daddu	$2,$24
+	ld	$14,2*8($5)
+	ld	$10,2*8($6)
+	sltu	$24,$14,$10
+	dsubu	$10,$14,$10
+	dsubu	$14,$10,$2
+	sgtu	$2,$14,$10
+	sd	$14,2*8($4)
+	daddu	$2,$24
 
-	.L_bn_sub_words_return:
-		.set	noreorder
-		RET
+.L_bn_sub_words_return:
+	.set	noreorder
+	jr	$31
 	move	$4,$2
 .end	bn_sub_words_internal
 
@@ -594,7 +588,7 @@ bn_div_3_words:
 	bne	$4,$6,bn_div_3_words_internal
 	ld	$5,-8($7)
 	li	$2,-1
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_div_3_words
 
@@ -630,7 +624,7 @@ bn_div_3_words_internal:
 	.set	reorder
 .L_bn_div_3_words_inner_loop_done:
 	.set	noreorder
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_div_3_words_internal
 #endif
@@ -643,7 +637,7 @@ bn_div_words:
 	bnez	$6,bn_div_words_internal
 	li	$2,-1		# I would rather signal div-by-zero
 				# which can be done with 'break 7'
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_div_words
 
@@ -749,7 +743,7 @@ bn_div_words_internal:
 
 	.set	noreorder
 	move	$5,$3
-	RET
+	jr	$31
 	move	$4,$2
 .end	bn_div_words_internal
 
@@ -758,7 +752,6 @@ bn_div_words_internal:
 .ent	bn_mul_comba8
 bn_mul_comba8:
 	.set	noreorder
-#ifndef __CHERI_PURE_CAPABILITY__
 	.frame	$29,6*8,$31
 	.mask	0x003f0000,-8
 	dsubu $29,6*8
@@ -768,17 +761,7 @@ bn_mul_comba8:
 	sd	$18,2*8($29)
 	sd	$17,1*8($29)
 	sd	$16,0*8($29)
-#else
-	.frame	$c11,6*8,$c17
-	.mask   0x003f0000,-8
-	cincoffsetimm	$c11,$c11,-48
-	csd	$21,$zero,40($c11)
-	csd	$20,$zero,32($c11)
-	csd	$19,$zero,24($c11)
-	csd	$18,$zero,16($c11)
-	csd	$17,$zero,8($c11)
-	csd	$16,$zero,0($c11)
-#endif
+
 	.set	reorder
 	ld	$12,0($5)	# If compiled with -mips3 option on
 				# R5000 box assembler barks on this
@@ -1386,7 +1369,6 @@ bn_mul_comba8:
 	sd	$2,15*8($4)	# r[15]=c1;
 
 	.set	noreorder
-#ifndef __CHERI_PURE_CAPABILITY__
 	ld	$21,5*8($29)
 	ld	$20,4*8($29)
 	ld	$19,3*8($29)
@@ -1395,16 +1377,6 @@ bn_mul_comba8:
 	ld	$16,0*8($29)
 	jr	$31
 	daddu $29,6*8
-#else
-	cld	$21,$zero,40($c11)
-	cld	$20,$zero,32($c11)
-	cld	$19,$zero,24($c11)
-	cld	$18,$zero,16($c11)
-	cld	$17,$zero,8($c11)
-	cld	$16,$zero,0($c11)
-	cjr	$c17
-	cincoffsetimm	$c11,$c11,48
-#endif
 .end	bn_mul_comba8
 
 .align	5
@@ -1562,7 +1534,7 @@ bn_mul_comba4:
 	sd	$3,7*8($4)
 
 	.set	noreorder
-	RET
+	jr	$31
 	nop
 .end	bn_mul_comba4
 
@@ -2068,7 +2040,7 @@ bn_sqr_comba8:
 	sd	$2,15*8($4)
 
 	.set	noreorder
-	RET
+	jr	$31
 	nop
 .end	bn_sqr_comba8
 
@@ -2203,6 +2175,6 @@ bn_sqr_comba4:
 	sd	$3,7*8($4)
 
 	.set	noreorder
-	RET
+	jr	$31
 	nop
 .end	bn_sqr_comba4
