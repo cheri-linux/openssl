@@ -21,11 +21,30 @@
 #endif
 
 #ifdef __CHERI_PURE_CAPABILITY__
+.macro c128_to_n64_12
+	move	$6,$5
+	move	$5,$4
+	cgetaddr $4,$c3
+.end_macro
+.macro c128_to_n64_20
+	cgetaddr $4,$c3
+	cgetaddr $5,$c4
+.end_macro
+.macro c128_to_n64_21
+	move	$6,$4
+	cgetaddr $4,$c3
+	cgetaddr $5,$c4
+.end_macro
 .macro c128_to_n64_22
 	move	$6,$4
 	move	$7,$5
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
+.end_macro
+.macro c128_to_n64_30
+	cgetaddr $4,$c3
+	cgetaddr $5,$c4
+	cgetaddr $6,$c5
 .end_macro
 .macro c128_to_n64_31
 	move	$7,$4
@@ -34,7 +53,15 @@
 	cgetaddr $6,$c5
 .end_macro
 #else
+.macro c128_to_n64_12
+.end_macro
+.macro c128_to_n64_20
+.end_macro
+.macro c128_to_n64_21
+.end_macro
 .macro c128_to_n64_22
+.end_macro
+.macro c128_to_n64_30
 .end_macro
 .macro c128_to_n64_31
 .end_macro
@@ -179,7 +206,7 @@ bn_mul_add_words_internal:
 
 .L_bn_mul_add_words_return:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_mul_add_words_internal
 
@@ -191,7 +218,7 @@ bn_mul_words:
 	c128_to_n64_22
 	bgtz	$6,bn_mul_words_internal
 	move	$2,$0
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_mul_words
 
@@ -284,7 +311,7 @@ bn_mul_words_internal:
 
 .L_bn_mul_words_return:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_mul_words_internal
 
@@ -296,7 +323,7 @@ bn_sqr_words:
 	c128_to_n64_21
 	bgtz	$6,bn_sqr_words_internal
 	move	$2,$0
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_sqr_words
 
@@ -377,7 +404,7 @@ bn_sqr_words_internal:
 
 .L_bn_sqr_words_return:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 
 .end	bn_sqr_words_internal
@@ -390,7 +417,7 @@ bn_add_words:
 	c128_to_n64_31
 	bgtz	$7,bn_add_words_internal
 	move	$2,$0
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_add_words
 
@@ -485,7 +512,7 @@ bn_add_words_internal:
 
 .L_bn_add_words_return:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 
 .end	bn_add_words_internal
@@ -498,7 +525,7 @@ bn_sub_words:
 	c128_to_n64_31
 	bgtz	$7,bn_sub_words_internal
 	move	$2,$0
-	jr	$31
+	RET
 	move	$4,$0
 .end	bn_sub_words
 
@@ -594,7 +621,7 @@ bn_sub_words_internal:
 
 .L_bn_sub_words_return:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_sub_words_internal
 
@@ -620,7 +647,7 @@ bn_div_3_words:
 	bne	$4,$6,bn_div_3_words_internal
 	ld	$5,-8($7)
 	li	$2,-1
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_div_3_words
 
@@ -656,7 +683,7 @@ bn_div_3_words_internal:
 	.set	reorder
 .L_bn_div_3_words_inner_loop_done:
 	.set	noreorder
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_div_3_words_internal
 #endif
@@ -669,7 +696,7 @@ bn_div_words:
 	bnez	$6,bn_div_words_internal
 	li	$2,-1		# I would rather signal div-by-zero
 				# which can be done with 'break 7'
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_div_words
 
@@ -775,7 +802,7 @@ bn_div_words_internal:
 
 	.set	noreorder
 	move	$5,$3
-	jr	$31
+	RET
 	move	$4,$2
 .end	bn_div_words_internal
 
@@ -784,6 +811,7 @@ bn_div_words_internal:
 .ent	bn_mul_comba8
 bn_mul_comba8:
 	.set	noreorder
+#ifndef __CHERI_PURE_CAPABILITY__
 	.frame	$29,6*8,$31
 	.mask	0x003f0000,-8
 	dsubu $29,6*8
@@ -793,6 +821,17 @@ bn_mul_comba8:
 	sd	$18,2*8($29)
 	sd	$17,1*8($29)
 	sd	$16,0*8($29)
+#else
+	.frame	$c11,6*8,$c17
+	.mask   0x003f0000,-8
+	cincoffsetimm	$c11,$c11,-48
+	csd	$21,$zero,40($c11)
+	csd	$20,$zero,32($c11)
+	csd	$19,$zero,24($c11)
+	csd	$18,$zero,16($c11)
+	csd	$17,$zero,8($c11)
+	csd	$16,$zero,0($c11)
+#endif
 
 	.set	reorder
 	c128_to_n64_30
@@ -1408,7 +1447,7 @@ bn_mul_comba8:
 	ld	$18,2*8($29)
 	ld	$17,1*8($29)
 	ld	$16,0*8($29)
-	jr	$31
+	RET
 	daddu $29,6*8
 .end	bn_mul_comba8
 
@@ -1568,7 +1607,7 @@ bn_mul_comba4:
 	sd	$3,7*8($4)
 
 	.set	noreorder
-	jr	$31
+	RET
 	nop
 .end	bn_mul_comba4
 
@@ -2075,7 +2114,7 @@ bn_sqr_comba8:
 	sd	$2,15*8($4)
 
 	.set	noreorder
-	jr	$31
+	RET
 	nop
 .end	bn_sqr_comba8
 
@@ -2211,6 +2250,6 @@ bn_sqr_comba4:
 	sd	$3,7*8($4)
 
 	.set	noreorder
-	jr	$31
+	RET
 	nop
 .end	bn_sqr_comba4
