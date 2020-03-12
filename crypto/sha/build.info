@@ -18,9 +18,9 @@ IF[{- !$disabled{asm} -}]
   $SHA1ASM_alpha=sha1-alpha.S
   $SHA1DEF_alpha=SHA1_ASM
 
-  $SHA1ASM_mips32=sha1-mips.S sha256-mips.S
+#  $SHA1ASM_mips32=sha1-mips.S sha256-mips.S
   $SHA1DEF_mips32=SHA1_ASM SHA256_ASM
-  $SHA1ASM_mips64=$SHA1ASM_mips32 sha512-mips.S
+#  $SHA1ASM_mips64=$SHA1ASM_mips32 sha512-mips.S
   $SHA1DEF_mips64=$SHA1DEF_mips32 SHA512_ASM
 
   $SHA1ASM_s390x=sha1-s390x.S sha256-s390x.S sha512-s390x.S
@@ -124,10 +124,10 @@ GENERATE[sha512-parisc.s]=asm/sha512-parisc.pl
 
 GENERATE[sha1-mips.S]=asm/sha1-mips.pl
 INCLUDE[sha1-mips.o]=..
-GENERATE[sha256-mips.S]=asm/sha512-mips.pl
-INCLUDE[sha256-mips.o]=..
-GENERATE[sha512-mips.S]=asm/sha512-mips.pl
-INCLUDE[sha512-mips.o]=..
+#GENERATE[sha256-mips.S]=asm/sha512-mips.pl
+#INCLUDE[sha256-mips.o]=..
+#GENERATE[sha512-mips.S]=asm/sha512-mips.pl
+#INCLUDE[sha512-mips.o]=..
 
 GENERATE[sha1-armv4-large.S]=asm/sha1-armv4-large.pl
 INCLUDE[sha1-armv4-large.o]=..
