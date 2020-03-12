@@ -25,46 +25,46 @@
 	move	$6,$5
 	move	$5,$4
 	cgetaddr $4,$c3
-.end_macro
+.endmacro
 .macro c128_to_n64_20
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
-.end_macro
+.endmacro
 .macro c128_to_n64_21
 	move	$6,$4
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
-.end_macro
+.endmacro
 .macro c128_to_n64_22
 	move	$6,$4
 	move	$7,$5
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
-.end_macro
+.endmacro
 .macro c128_to_n64_30
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
 	cgetaddr $6,$c5
-.end_macro
+.endmacro
 .macro c128_to_n64_31
 	move	$7,$4
 	cgetaddr $4,$c3
 	cgetaddr $5,$c4
 	cgetaddr $6,$c5
-.end_macro
+.endmacro
 #else
 .macro c128_to_n64_12
-.end_macro
+.endmacro
 .macro c128_to_n64_20
-.end_macro
+.endmacro
 .macro c128_to_n64_21
-.end_macro
+.endmacro
 .macro c128_to_n64_22
-.end_macro
+.endmacro
 .macro c128_to_n64_30
-.end_macro
+.endmacro
 .macro c128_to_n64_31
-.end_macro
+.endmacro
 #endif
 
 .rdata
@@ -1441,14 +1441,25 @@ bn_mul_comba8:
 	sd	$2,15*8($4)	# r[15]=c1;
 
 	.set	noreorder
+#ifndef __CHERI_PURE_CAPABILITY__
 	ld	$21,5*8($29)
 	ld	$20,4*8($29)
 	ld	$19,3*8($29)
 	ld	$18,2*8($29)
 	ld	$17,1*8($29)
 	ld	$16,0*8($29)
-	RET
+	jr	$31
 	daddu $29,6*8
+#else
+	cld	$21,$zero,40($c11)
+	cld	$20,$zero,32($c11)
+	cld	$19,$zero,24($c11)
+	cld	$18,$zero,16($c11)
+	cld	$17,$zero,8($c11)
+	cld	$16,$zero,0($c11)
+	cjr	$c17
+	cincoffsetimm	$c11,$c11,48
+#endif
 .end	bn_mul_comba8
 
 .align	5

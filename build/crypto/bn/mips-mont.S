@@ -1,5 +1,25 @@
 #include "mips_arch.h"
 
+#ifndef __CHERI_PURE_CAPABILITY__
+ #define RET	jr	$31
+ #define PUSH(rs,off)	sd	rs,(off)*8($29)
+ #define POP(rd,off)	ld	rd,(off)*8($29)
+ #define SUBSP(imm)	dsubu	$29,(imm)*8
+ #define ADDSP(imm)	daddu	$29,(imm)*8
+ #define STRSP(rd)	move	rd,$29
+ #define LDRSP(rs)	move	$29,rs
+ #define FRAME(framereg,size)	.frame	framereg,size,$31
+#else
+ #define RET	cjr	$c17
+ #define PUSH(rs,off)	csd	rs,$zero,(off)*8($c11)
+ #define POP(rd,off)	cld	rd,$zero,(off)*8($c11)
+ #define SUBSP(imm)	cincoffsetimm	$c11,$c11,-(imm)*8
+ #define ADDSP(imm)	cincoffsetimm	$c11,$c11,(imm)*8
+ #define STRSP(rd)	cgetaddr	rd,$c11
+ #define LDRSP(rs)	csetaddr	$c11,$c11,rs
+ #define FRAME(framereg,size)	.frame	framereg,size,$c17
+#endif
+
 .text
 
 .set	noat
@@ -9,32 +29,40 @@
 .globl	bn_mul_mont
 .ent	bn_mul_mont
 bn_mul_mont:
+#ifdef __CHERI_PURE_CAPABILITY__
+	move	$9,$4
+	cgetaddr $8,$c7
+	cgetaddr $7,$c6
+	cgetaddr $6,$c5
+	cgetaddr $5,$c4
+	cgetaddr $4,$c3
+#endif
 	slt	$1,$9,4
 	bnez	$1,1f
 	li	$2,0
 	slt	$1,$9,17	# on in-order CPU
 	bnez	$1,bn_mul_mont_internal
 	nop
-1:	jr	$31
+1:	RET
 	li	$4,0
 .end	bn_mul_mont
 
 .align	5
 .ent	bn_mul_mont_internal
 bn_mul_mont_internal:
-	.frame	$30,14*8,$31
-	.mask	0x40000000|16711680,-8
-	dsubu $29,14*8
-	sd	$30,(14-1)*8($29)
-	sd	$23,(14-2)*8($29)
-	sd	$22,(14-3)*8($29)
-	sd	$21,(14-4)*8($29)
-	sd	$20,(14-5)*8($29)
-	sd	$19,(14-6)*8($29)
-	sd	$18,(14-7)*8($29)
-	sd	$17,(14-8)*8($29)
-	sd	$16,(14-9)*8($29)
-	move	$30,$29
+	FRAME($30,14*8)
+	.mask   0x40000000|16711680,-8
+	SUBSP(14)
+	PUSH($30,14-1)
+	PUSH($23,14-2)
+	PUSH($22,14-3)
+	PUSH($21,14-4)
+	PUSH($20,14-5)
+	PUSH($19,14-6)
+	PUSH($18,14-7)
+	PUSH($17,14-8)
+	PUSH($16,14-9)
+	STRSP($30)
 
 	.set	reorder
 	ld	$8,0($8)
@@ -42,11 +70,18 @@ bn_mul_mont_internal:
 	ld	$12,0($5)	# ap[0]
 	ld	$14,0($7)	# np[0]
 
-	dsubu $29,2*8	# place for two extra words
+	SUBSP(2)	# place for two extra words
 	sll	$9,3
 	li	$1,-4096
+#ifndef __CHERI_PURE_CAPABILITY__
 	dsubu $29,$9
 	and	$29,$1
+#else
+	dsubu $9,$zero,$9
+	cincoffset $c11,$c11,$9
+	dsubu $9,$zero,$9
+	candaddr $c11,$c11,$1
+#endif
 
 	dmultu	($12,$13)
 	ld	$17,8($5)
@@ -70,7 +105,7 @@ bn_mul_mont_internal:
 	mflo	($18,$19,$23)
 	mfhi	($19,$19,$23)
 
-	move	$15,$29
+	STRSP($15)
 	li	$22,2*8
 .align	4
 .L1st:
@@ -129,7 +164,7 @@ bn_mul_mont_internal:
 	ld	$13,($13)
 	ld	$12,($5)
 	ld	$17,8($5)
-	ld	$20,($29)
+	POP($20,0)
 
 	dmultu	($12,$13)
 	ld	$14,($7)
@@ -157,7 +192,7 @@ bn_mul_mont_internal:
 	mflo	($18,$19,$23)
 	mfhi	($19,$19,$23)
 
-	move	$15,$29
+	STRSP($15)
 	li	$22,2*8
 	ld	$20,8($15)
 .align	4
@@ -224,9 +259,14 @@ bn_mul_mont_internal:
 	bnez	$2,.Louter
 
 	.set	noreorder
+#ifndef __CHERI_PURE_CAPABILITY__
 	daddu $20,$29,$9	# &tp[num]
-	move	$15,$29
-	move	$5,$29
+#else
+	cgetaddr $1,$c11
+	daddu $20,$1,$9
+#endif
+	STRSP($15)
+	STRSP($5)
 	li	$11,0		# clear borrow bit
 
 .align	4
@@ -245,7 +285,7 @@ bn_mul_mont_internal:
 	daddu $4,8
 
 	dsubu	$11,$25,$11	# handle upmost overflow bit
-	move	$15,$29
+	STRSP($15)
 	dsubu $4,$9	# restore rp
 	not	$25,$11
 
@@ -265,18 +305,18 @@ bn_mul_mont_internal:
 	li	$2,1
 
 	.set	noreorder
-	move	$29,$30
-	ld	$30,(14-1)*8($29)
-	ld	$23,(14-2)*8($29)
-	ld	$22,(14-3)*8($29)
-	ld	$21,(14-4)*8($29)
-	ld	$20,(14-5)*8($29)
-	ld	$19,(14-6)*8($29)
-	ld	$18,(14-7)*8($29)
-	ld	$17,(14-8)*8($29)
-	ld	$16,(14-9)*8($29)
-	jr	$31
-	daddu $29,14*8
+	LDRSP($30)
+	POP($30,14-1)
+	POP($23,14-2)
+	POP($22,14-3)
+	POP($21,14-4)
+	POP($20,14-5)
+	POP($19,14-6)
+	POP($18,14-7)
+	POP($17,14-8)
+	POP($16,14-9)
+	RET
+	ADDSP(14)
 .end	bn_mul_mont_internal
 .rdata
 .asciiz	"Montgomery Multiplication for MIPS, CRYPTOGAMS by <appro@openssl.org>"
