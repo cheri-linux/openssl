@@ -854,12 +854,24 @@ int BN_nist_mod_256(BIGNUM *r, const BIGNUM *a, const BIGNUM *field,
     } else
         carry = 1;
 
+#ifndef __CHERI_PURE_CAPABILITY__
     mask =
         0 - (PTR_SIZE_INT) (*u.f) (c_d, r_d, _nist_p_256[0], BN_NIST_256_TOP);
+#else
+    bn_addsub_f uf = (bn_addsub_f)__builtin_cheri_address_set(
+	__builtin_cheri_program_counter_get(), u.p);
+    mask =
+        0 - (PTR_SIZE_INT) (*uf) (c_d, r_d, _nist_p_256[0], BN_NIST_256_TOP);
+#endif
     mask &= 0 - (PTR_SIZE_INT) carry;
     res = c_d;
+#ifndef __CHERI_PURE_CAPABILITY__
     res = (BN_ULONG *)(((PTR_SIZE_INT) res & ~mask) |
                        ((PTR_SIZE_INT) r_d & mask));
+#else
+    res = (BN_ULONG *)__builtin_cheri_address_set(__builtin_cheri_global_data_get(),
+        (((PTR_SIZE_INT) res & ~mask) | ((PTR_SIZE_INT) r_d & mask)));
+#endif
     nist_cp_bn(r_d, res, BN_NIST_256_TOP);
     r->top = BN_NIST_256_TOP;
     bn_correct_top(r);
@@ -1135,12 +1147,24 @@ int BN_nist_mod_384(BIGNUM *r, const BIGNUM *a, const BIGNUM *field,
     } else
         carry = 1;
 
+#ifndef __CHERI_PURE_CAPABILITY__
     mask =
         0 - (PTR_SIZE_INT) (*u.f) (c_d, r_d, _nist_p_384[0], BN_NIST_384_TOP);
+#else
+    bn_addsub_f uf = (bn_addsub_f)__builtin_cheri_address_set(
+	__builtin_cheri_program_counter_get(), u.p);
+    mask =
+        0 - (PTR_SIZE_INT) (*uf) (c_d, r_d, _nist_p_384[0], BN_NIST_384_TOP);
+#endif
     mask &= 0 - (PTR_SIZE_INT) carry;
     res = c_d;
+#ifndef __CHERI_PURE_CAPABILITY__
     res = (BN_ULONG *)(((PTR_SIZE_INT) res & ~mask) |
                        ((PTR_SIZE_INT) r_d & mask));
+#else
+    res = (BN_ULONG *)__builtin_cheri_address_set(__builtin_cheri_global_data_get(),
+        (((PTR_SIZE_INT) res & ~mask) | ((PTR_SIZE_INT) r_d & mask)));
+#endif
     nist_cp_bn(r_d, res, BN_NIST_384_TOP);
     r->top = BN_NIST_384_TOP;
     bn_correct_top(r);
